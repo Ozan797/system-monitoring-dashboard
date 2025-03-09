@@ -1,12 +1,14 @@
-import express, { Request, Response } from 'express';
+import express from 'express';
+import performanceRoutes from './routes/performance';
 
 const app = express();
 const port = process.env.PORT || 3000;
 
 app.use(express.json());
+app.use('/api', performanceRoutes);
 
-// Basic route for testing
-app.get('/', (req: Request, res: Response) => {
+// Basic testing route
+app.get('/', (req, res) => {
   res.send('Backend is up and running!');
 });
 
