@@ -1,5 +1,13 @@
 import React, { useEffect, useState } from 'react';
 import { io, Socket } from 'socket.io-client';
+import {
+  Card,
+  CardContent,
+  Typography,
+  Grid,
+  Container,
+  Box
+} from '@mui/material';
 
 interface Metrics {
   cpuUsage: number;
@@ -17,11 +25,9 @@ const MetricsDisplay: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    // Connect to the Socket.io server
     const socketClient = io('http://localhost:3000');
     setSocket(socketClient);
 
-    // Listen for metrics updates
     socketClient.on('metricsUpdate', (data: Metrics) => {
       setMetrics(data);
     });
@@ -30,40 +36,58 @@ const MetricsDisplay: React.FC = () => {
       setError('Socket connection error: ' + err);
     });
 
-    // Cleanup on component unmount
     return () => {
       socketClient.disconnect();
     };
   }, []);
 
-  if (error) return <p>Error: {error}</p>;
+  if (error) return <Typography color="error">{error}</Typography>;
 
   return (
-    <div>
-      <h2>Real-Time System Performance Metrics</h2>
+    <Container maxWidth="md" sx={{ marginTop: '2rem' }}>
+      <Box
+        sx={{
+          background: 'linear-gradient(45deg, #00bcd4 30%, #ff5722 90%)',
+          padding: '1rem',
+          borderRadius: '8px',
+          marginBottom: '2rem'
+        }}
+      >
+        <Typography variant="h4" gutterBottom align="center" color="common.white">
+          Real-Time System Performance Metrics
+        </Typography>
+      </Box>
       {metrics ? (
-        <ul>
-          <li>CPU Usage: {metrics.cpuUsage}%</li>
-          <li>Memory Usage: {metrics.memoryUsage}%</li>
-          <li>Disk Activity: {metrics.diskActivity}%</li>
-          <li>
-            CPU Speed:{" "}
-            {metrics.cpuSpeed !== null ? `${metrics.cpuSpeed} GHz` : "N/A"}
-          </li>
-          <li>System Uptime: {metrics.systemUptime} seconds</li>
-          <li>
-            Network Download Speed:{" "}
-            {metrics.networkDownloadSpeed !== null ? `${metrics.networkDownloadSpeed} B/s` : "N/A"}
-          </li>
-          <li>
-            Network Upload Speed:{" "}
-            {metrics.networkUploadSpeed !== null ? `${metrics.networkUploadSpeed} B/s` : "N/A"}
-          </li>
-        </ul>
+        <Grid container spacing={3}>
+          {[
+            { title: 'CPU Usage', value: `${metrics.cpuUsage}%` },
+            { title: 'Memory Usage', value: `${metrics.memoryUsage}%` },
+            { title: 'Disk Activity', value: `${metrics.diskActivity}%` },
+            { title: 'CPU Speed', value: metrics.cpuSpeed !== null ? `${metrics.cpuSpeed} GHz` : 'N/A' },
+            { title: 'System Uptime', value: `${metrics.systemUptime} sec` },
+            { title: 'Network Download Speed', value: metrics.networkDownloadSpeed !== null ? `${metrics.networkDownloadSpeed} B/s` : 'N/A' },
+            { title: 'Network Upload Speed', value: metrics.networkUploadSpeed !== null ? `${metrics.networkUploadSpeed} B/s` : 'N/A' },
+          ].map((item, index) => (
+            <Grid item xs={12} sm={6} key={index}>
+              <Card sx={{ backgroundColor: 'background.paper' }}>
+                <CardContent>
+                  <Typography variant="h6" gutterBottom color="primary">
+                    {item.title}
+                  </Typography>
+                  <Typography variant="body1" color="text.secondary">
+                    {item.value}
+                  </Typography>
+                </CardContent>
+              </Card>
+            </Grid>
+          ))}
+        </Grid>
       ) : (
-        <p>Waiting for metrics...</p>
+        <Typography align="center" variant="h6">
+          Waiting for metrics...
+        </Typography>
       )}
-    </div>
+    </Container>
   );
 };
 
