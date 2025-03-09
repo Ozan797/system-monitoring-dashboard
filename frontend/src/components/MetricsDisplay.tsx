@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { io, Socket } from 'socket.io-client';
 
 interface Metrics {
   cpuUsage: number;
@@ -8,39 +9,43 @@ interface Metrics {
 
 const MetricsDisplay: React.FC = () => {
   const [metrics, setMetrics] = useState<Metrics | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [socket, setSocket] = useState<Socket | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    // Fetch the performance metrics from the backend API
-    fetch('/api/metrics')
-      .then((response) => {
-        if (!response.ok) {
-          throw new Error('Network response was not ok');
-        }
-        return response.json();
-      })
-      .then((data: Metrics) => {
-        setMetrics(data);
-        setLoading(false);
-      })
-      .catch((err) => {
-        setError(err.message);
-        setLoading(false);
-      });
+    // Connect to the Socket.io server
+    const socketClient = io('http://localhost:3000');
+    setSocket(socketClient);
+
+    // Listen for metrics updates
+    socketClient.on('metricsUpdate', (data: Metrics) => {
+      setMetrics(data);
+    });
+
+    socketClient.on('connect_error', (err) => {
+      setError('Socket connection error: ' + err);
+    });
+
+    // Cleanup on component unmount
+    return () => {
+      socketClient.disconnect();
+    };
   }, []);
 
-  if (loading) return <p>Loading metrics...</p>;
   if (error) return <p>Error: {error}</p>;
 
   return (
     <div>
-      <h2>System Performance Metrics</h2>
-      <ul>
-        <li>CPU Usage: {metrics?.cpuUsage}%</li>
-        <li>Memory Usage: {metrics?.memoryUsage}%</li>
-        <li>Disk Activity: {metrics?.diskActivity}%</li>
-      </ul>
+      <h2>Real-Time System Performance Metrics</h2>
+      {metrics ? (
+        <ul>
+          <li>CPU Usage: {metrics.cpuUsage}%</li>
+          <li>Memory Usage: {metrics.memoryUsage}%</li>
+          <li>Disk Activity: {metrics.diskActivity}%</li>
+        </ul>
+      ) : (
+        <p>Waiting for metrics...</p>
+      )}
     </div>
   );
 };
