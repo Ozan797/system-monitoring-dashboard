@@ -5,6 +5,10 @@ interface Metrics {
   cpuUsage: number;
   memoryUsage: number;
   diskActivity: number;
+  cpuSpeed: number | null;
+  systemUptime: number;
+  networkDownloadSpeed: number | null;
+  networkUploadSpeed: number | null;
 }
 
 const MetricsDisplay: React.FC = () => {
@@ -42,6 +46,19 @@ const MetricsDisplay: React.FC = () => {
           <li>CPU Usage: {metrics.cpuUsage}%</li>
           <li>Memory Usage: {metrics.memoryUsage}%</li>
           <li>Disk Activity: {metrics.diskActivity}%</li>
+          <li>
+            CPU Speed:{" "}
+            {metrics.cpuSpeed !== null ? `${metrics.cpuSpeed} GHz` : "N/A"}
+          </li>
+          <li>System Uptime: {metrics.systemUptime} seconds</li>
+          <li>
+            Network Download Speed:{" "}
+            {metrics.networkDownloadSpeed !== null ? `${metrics.networkDownloadSpeed} B/s` : "N/A"}
+          </li>
+          <li>
+            Network Upload Speed:{" "}
+            {metrics.networkUploadSpeed !== null ? `${metrics.networkUploadSpeed} B/s` : "N/A"}
+          </li>
         </ul>
       ) : (
         <p>Waiting for metrics...</p>
